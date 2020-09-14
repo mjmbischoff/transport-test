@@ -33,6 +33,12 @@ public class TransportTester implements Callable<Integer> {
     @CommandLine.Option(names = {"-x", "--xPack"}, description = "use xPack client", defaultValue = "true")
     private boolean xpack;
 
+    @CommandLine.Option(names = {"-s", "--ssl"}, description = "use ssl", defaultValue = "true")
+    private boolean enableSsl;
+
+    @CommandLine.Option(names = {"-k", "--insecure"}, description = "Insecure", defaultValue = "false")
+    private boolean insecure;
+
     @CommandLine.Option(names = {"--key"}, description = "/path/to/client.key")
     private String sslKey;
 
@@ -67,8 +73,9 @@ public class TransportTester implements Callable<Integer> {
             System.out.println("Using " + transportAddress + " port: "+ transportPort + "clusterId: "+clusterId);
 
             Settings.Builder builder = Settings.builder()
-                    .put("transport.ping_schedule", "5s");
-                    //.put("transport.sniff", false) // Disabled by default and *must* be disabled.
+                    .put("transport.ping_schedule", "5s")
+                    .put("transport.sniff", false)
+                    .put("transport.tcp.compress", true);
 
             if(clusterId!=null) {
                 builder
@@ -78,7 +85,8 @@ public class TransportTester implements Callable<Integer> {
 
             builder
                 //.put("action.bulk.compress", false)
-                .put("xpack.security.transport.ssl.enabled", "true");
+                .put("xpack.security.transport.ssl.enabled", enableSsl)
+                .put("xpack.security.transport.ssl.verification_mode", insecure ? "none" : "full");
 
             if(usernamePassword!=null) {
                 builder.put("xpack.security.user", usernamePassword);
