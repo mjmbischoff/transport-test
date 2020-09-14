@@ -5,8 +5,6 @@ import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.cluster.health.ClusterIndexHealth;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.TransportAddress;
-import org.elasticsearch.shield.ShieldPlugin;
-import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.elasticsearch.xpack.client.PreBuiltXPackTransportClient;
 import picocli.CommandLine;
 
@@ -30,9 +28,6 @@ public class TransportTester implements Callable<Integer> {
     @CommandLine.Option(names = {"-u", "--credentials"}, description = "username:password (only used when specifying clusterId)")
     private String usernamePassword;
 
-    @CommandLine.Option(names = {"-x", "--xPack"}, description = "use xPack client", defaultValue = "true")
-    private boolean xpack;
-
     @CommandLine.Option(names = {"-s", "--ssl"}, description = "use ssl", defaultValue = "true")
     private boolean enableSsl;
 
@@ -54,7 +49,7 @@ public class TransportTester implements Callable<Integer> {
     }
 
     public Integer call() throws Exception {
-        try(TransportClient client = xpack ? createXPackClient() : createClient()) {
+        try(TransportClient client = createXPackClient()) {
 
             switch (command) {
                 case "health": return checkHealth(client);
@@ -70,9 +65,10 @@ public class TransportTester implements Callable<Integer> {
     private TransportClient createXPackClient() {
         // xpack translated example of https://www.elastic.co/guide/en/cloud-enterprise/current/security-transport.html
         if(clusterId!=null) {
-            System.out.println("Using " + transportAddress + " port: "+ transportPort + "clusterId: "+clusterId);
+            System.out.println("Using " + transportAddress + " port: "+ transportPort + " clusterId: "+clusterId);
 
             Settings.Builder builder = Settings.builder()
+                .put("client.transport.nodes_sampler_interval", "5s")
                 .put("client.transport.sniff", false)
                 .put("transport.tcp.compress", true);
 
@@ -105,6 +101,8 @@ public class TransportTester implements Callable<Integer> {
 
             Settings settings = builder.build();
 
+            System.out.println("settings: \n" + settings.toDelimitedString('\n'));
+
             return new PreBuiltXPackTransportClient(settings)
                     .addTransportAddress(new TransportAddress(transportAddress, transportPort));
         }
@@ -112,31 +110,6 @@ public class TransportTester implements Callable<Integer> {
         System.out.println("Using " + transportAddress + " port: "+ transportPort);
 
         return new PreBuiltXPackTransportClient(Settings.EMPTY)
-                .addTransportAddress(new TransportAddress(transportAddress, transportPort));
-    }
-
-    private TransportClient createClient() {
-        // https://www.elastic.co/guide/en/cloud-enterprise/current/security-transport.html
-        if(clusterId!=null) {
-            System.out.println("Using " + transportAddress + " port: "+ transportPort + "clusterId: "+clusterId);
-
-            Settings settings = Settings.builder()
-                    .put("transport.ping_schedule", "5s")
-                    //.put("transport.sniff", false) // Disabled by default and *must* be disabled.
-                    .put("cluster.name", clusterId)
-                    .put("action.bulk.compress", false)
-                    .put("shield.transport.ssl", true)
-                    .put("request.headers.X-Found-Cluster", clusterId)
-                    .put("shield.user", usernamePassword) // your shield username and password
-                    .build();
-
-            return new PreBuiltTransportClient(settings, ShieldPlugin.class)
-                    .addTransportAddress(new TransportAddress(transportAddress, transportPort));
-        }
-
-        System.out.println("Using " + transportAddress + " port: "+ transportPort);
-
-        return new PreBuiltTransportClient(Settings.EMPTY)
                 .addTransportAddress(new TransportAddress(transportAddress, transportPort));
     }
 
