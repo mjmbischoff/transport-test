@@ -21,7 +21,7 @@ public class TransportTester implements Callable<Integer> {
     @CommandLine.Option(names = {"-a", "--address"}, description = "ip address of transport server", defaultValue = "127.0.0.1")
     private java.net.InetAddress transportAddress;
 
-    @CommandLine.Option(names = {"-p", "--port"}, description = "transport port", defaultValue = "9200")
+    @CommandLine.Option(names = {"-p", "--port"}, description = "transport port", defaultValue = "9300")
     private int transportPort;
 
     @CommandLine.Option(names = {"-c", "--clusterId"}, description = "clusterId (must also specify -u)")
@@ -66,18 +66,37 @@ public class TransportTester implements Callable<Integer> {
         if(clusterId!=null) {
             System.out.println("Using " + transportAddress + " port: "+ transportPort + "clusterId: "+clusterId);
 
-            Settings settings = Settings.builder()
-                    .put("transport.ping_schedule", "5s")
+            Settings.Builder builder = Settings.builder()
+                    .put("transport.ping_schedule", "5s");
                     //.put("transport.sniff", false) // Disabled by default and *must* be disabled.
+
+            if(clusterId!=null) {
+                builder
                     .put("cluster.name", clusterId)
-                    .put("action.bulk.compress", false)
-                    .put("xpack.security.transport.ssl.enabled", "true")
-                    .put("request.headers.X-Found-Cluster", clusterId)
-                    .put("xpack.security.user", usernamePassword)
-                    .put("xpack.ssl.key", sslKey)
-                    .put("xpack.ssl.certificate", certificate)
-                    .put("xpack.ssl.certificate_authorities", certificateAuthority)
-                    .build();
+                    .put("request.headers.X-Found-Cluster", clusterId);
+            }
+
+            builder
+                .put("action.bulk.compress", false)
+                .put("xpack.security.transport.ssl.enabled", "true");
+
+            if(usernamePassword!=null) {
+                builder.put("xpack.security.user", usernamePassword);
+            }
+
+            if(sslKey!=null) {
+                builder.put("xpack.ssl.key", sslKey);
+            }
+
+            if(certificate!=null) {
+                builder.put("xpack.ssl.certificate", certificate);
+            }
+
+            if(certificateAuthority!=null) {
+                builder.put("xpack.ssl.certificate_authorities", certificateAuthority);
+            }
+
+            Settings settings = builder.build();
 
             return new PreBuiltXPackTransportClient(settings)
                     .addTransportAddress(new TransportAddress(transportAddress, transportPort));
