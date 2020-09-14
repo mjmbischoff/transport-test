@@ -77,7 +77,7 @@ public class TransportTester implements Callable<Integer> {
             }
 
             builder
-                .put("action.bulk.compress", false)
+                //.put("action.bulk.compress", false)
                 .put("xpack.security.transport.ssl.enabled", "true");
 
             if(usernamePassword!=null) {
