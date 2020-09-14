@@ -8,7 +8,6 @@ import org.elasticsearch.common.transport.TransportAddress;
 import org.elasticsearch.xpack.client.PreBuiltXPackTransportClient;
 import picocli.CommandLine;
 
-import java.net.UnknownHostException;
 import java.util.concurrent.Callable;
 
 public class TransportTester implements Callable<Integer> {
@@ -43,7 +42,7 @@ public class TransportTester implements Callable<Integer> {
     @CommandLine.Option(names = {"--ca"}, description = "/path/to/ca.crt")
     private String certificateAuthority;
 
-    public static void main(String[] args) throws UnknownHostException {
+    public static void main(String[] args) {
         int exitCode = new CommandLine(new TransportTester()).execute(args);
         System.exit(exitCode);
     }
@@ -62,6 +61,7 @@ public class TransportTester implements Callable<Integer> {
     }
 
     // https://www.elastic.co/guide/en/elasticsearch/reference/6.8/java-clients.html
+    // https://github.com/elastic/found-shield-example/blob/6.x/src/main/java/org/elasticsearch/cloud/transport/example/TransportExample.java
     private TransportClient createXPackClient() {
         // xpack translated example of https://www.elastic.co/guide/en/cloud-enterprise/current/security-transport.html
         if(clusterId!=null) {
@@ -79,7 +79,6 @@ public class TransportTester implements Callable<Integer> {
             }
 
             builder
-                //.put("action.bulk.compress", false)
                 .put("xpack.security.transport.ssl.enabled", enableSsl)
                 .put("xpack.security.transport.ssl.verification_mode", insecure ? "none" : "full");
 
