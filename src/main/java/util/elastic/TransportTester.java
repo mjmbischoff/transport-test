@@ -30,20 +30,17 @@ public class TransportTester implements Callable<Integer> {
     @CommandLine.Option(names = {"-u", "--credentials"}, description = "username:password (only used when specifying clusterId)")
     private String usernamePassword;
 
-    @CommandLine.Option(names = {"-x", "--xPack"}, description = "use xPack client")
+    @CommandLine.Option(names = {"-x", "--xPack"}, description = "use xPack client", defaultValue = "true")
     private boolean xpack;
 
     @CommandLine.Option(names = {"--key"}, description = "/path/to/client.key")
     private String sslKey;
 
     @CommandLine.Option(names = {"--cert"}, description = "/path/to/client.crt")
-    private boolean certificate;
+    private String certificate;
 
     @CommandLine.Option(names = {"--ca"}, description = "/path/to/ca.crt")
-    private boolean certificateAuthority;
-
-    public TransportTester() throws UnknownHostException {
-    }
+    private String certificateAuthority;
 
     public static void main(String[] args) throws UnknownHostException {
         int exitCode = new CommandLine(new TransportTester()).execute(args);
@@ -51,8 +48,7 @@ public class TransportTester implements Callable<Integer> {
     }
 
     public Integer call() throws Exception {
-        try(
-                TransportClient client = xpack ? createXPackClient() : createClient()) {
+        try(TransportClient client = xpack ? createXPackClient() : createClient()) {
 
             switch (command) {
                 case "health": return checkHealth(client);
