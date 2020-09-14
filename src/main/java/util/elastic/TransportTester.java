@@ -73,9 +73,8 @@ public class TransportTester implements Callable<Integer> {
             System.out.println("Using " + transportAddress + " port: "+ transportPort + "clusterId: "+clusterId);
 
             Settings.Builder builder = Settings.builder()
-                    .put("client.transport.ping_schedule", "5s")
-                    .put("client.transport.sniff", false)
-                    .put("transport.tcp.compress", true);
+                .put("client.transport.sniff", false)
+                .put("transport.tcp.compress", true);
 
             if(clusterId!=null) {
                 builder
