@@ -70,17 +70,15 @@ public class TransportTester implements Callable<Integer> {
             Settings.Builder builder = Settings.builder()
                 .put("client.transport.nodes_sampler_interval", "5s")
                 .put("client.transport.sniff", false)
-                .put("transport.tcp.compress", true);
+                .put("transport.tcp.compress", true)
+                .put("xpack.security.transport.ssl.enabled", enableSsl)
+                .put("xpack.security.transport.ssl.verification_mode", insecure ? "none" : "full");
 
             if(clusterId!=null) {
                 builder
                     .put("cluster.name", clusterId)
                     .put("request.headers.X-Found-Cluster", clusterId);
             }
-
-            builder
-                .put("xpack.security.transport.ssl.enabled", enableSsl)
-                .put("xpack.security.transport.ssl.verification_mode", insecure ? "none" : "full");
 
             if(usernamePassword!=null) {
                 builder.put("xpack.security.user", usernamePassword);
